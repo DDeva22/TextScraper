@@ -282,7 +282,7 @@ bibleData = [
 ]
 
 
-
+writeStream.write("book, subhead, chapter, verse");
 axios.get(agentURL)
   .then(res => {
     const $ = cheerio.load(res.data)
