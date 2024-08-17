@@ -293,11 +293,12 @@ axios.get(agentURL)
 
       //SUBHEADER FINDER/PRINTER
       if ( $(element).find(".subhead").text() != "" || $(element).find(".subhead").text() != undefined ){
-        console.log($(element).find(".subhead").text());
+        const subHead = $(element).find(".subhead").text()
+        console.log(subHead);
       }else{
         console.log("PRINTED");
       }
-      
+      writeStream.write(`Book: ${"Genesis"}, subhead: ${subHead}, chapter: ${1}, verse: ${verses}`);
 
 
 
