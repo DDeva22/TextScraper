@@ -12,7 +12,7 @@ const writeStream = fs.createWriteStream("LSB Bible.csv");
 
 
 
-agentURL = "https://read.lsbible.org/?q=Genesis+1";
+agentURL = "https://read.lsbible.org/?q=Genesis+2";
 
 bibleData = [
   {
@@ -282,32 +282,35 @@ bibleData = [
 ]
 
 
-writeStream.write("book, subhead, chapter, verse");
+writeStream.write("book, subhead, chapter, verseNumber, verse");
 axios.get(agentURL)
   .then(res => {
     const $ = cheerio.load(res.data)
     $(".verse").each((index, element) => {
+      const subhead = ''
       const verses = $(element).find(".prose").text();
       const numberofVerse = $(element).attr("data-key");
 
 
       //SUBHEADER FINDER/PRINTER
       if ( $(element).find(".subhead").text() != "" || $(element).find(".subhead").text() != undefined ){
-        const subHead = $(element).find(".subhead").text()
+        let result = $(element).find(".subhead").text();
+        const subHead = result;
         console.log(subHead);
       }else{
         console.log("PRINTED");
       }
-      writeStream.write(`Book: ${"Genesis"}, subhead: ${subHead}, chapter: ${1}, verse: ${verses}`);
+      writeStream.write(`\n${"Genesis"},${subhead},${1},${numberofVerse},${verses}`);
+      //it's being seperated by commas. FIX IT!
 
 
-
+     
       console.log(numberofVerse);
       console.log(verses);
-    })
+    });
   }).catch(err => console.error(err));
 
-
+ 
 
 
 app.listen(port, () => {
