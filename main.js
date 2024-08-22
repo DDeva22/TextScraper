@@ -1,6 +1,7 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 const pretty = require("pretty");
+const { v6: uuidv6} = require("uuid");
 
 const fs = require("fs");
 
@@ -8,11 +9,19 @@ const express = require("express");
 const app = express()
 const port = process.env.PORT || 3000
 
-const writeStream = fs.createWriteStream("LSB Bible.csv");
+// const writeStream = fs.createWriteStream("LSB Bible.csv");
 
 
 
-agentURL = "https://read.lsbible.org/?q=Genesis+2";
+
+const connection = require("./DATABASE/server.js");
+
+
+
+agentURL = "https://read.lsbible.org/?q=Genesis+1";
+
+
+
 
 bibleData = [
   {
@@ -282,29 +291,45 @@ bibleData = [
 ]
 
 
-writeStream.write("book, subhead, chapter, verseNumber, verse");
+
 axios.get(agentURL)
   .then(res => {
     const $ = cheerio.load(res.data)
     $(".verse").each((index, element) => {
-      const subhead = ''
-      const verses = $(element).find(".prose").text();
-      const numberofVerse = $(element).attr("data-key");
-
+      let verses = $(element).find(".prose").text();
+      let numberofVerse = $(element).attr("data-key");
+      let subHead;
+      
 
       //SUBHEADER FINDER/PRINTER
-      if ( $(element).find(".subhead").text() != "" || $(element).find(".subhead").text() != undefined ){
-        let result = $(element).find(".subhead").text();
-        const subHead = result;
-        console.log(subHead);
-      }else{
-        console.log("PRINTED");
+      if ( $(element).find(".subhead").text() != "" || $(element).find(".subhead").text() != "undefined" || $(element).find(".subhead").text() != null || $(element).find(".subhead").text() != undefined ){
+  
+        subHead = $(element).find(".subhead").text();
+        
+      } else {
+        subhead = "empty";
       }
-      writeStream.write(`\n${"Genesis"},${subhead},${1},${numberofVerse},${verses}`);
-      //it's being seperated by commas. FIX IT!
+      
+      let versesWithoutCommas = verses.replace(/,/g,"<^>");
+      let adjustnumberofVerse = numberofVerse.replace(/-/g,'', 'hex')
+      let test = "ABC";
+
+      let sqlStatement1 = `INSERT INTO scrapeddata (idscrapedData, book, subHead, chapter, verseNumber, verse) VALUES ( ${uuidv6()}, ${"Genesis"}, ${subHead}, ${1}, ${numberofVerse}, &*${versesWithoutCommas}&*)`;
+      let sqlStatement2 = "INSERT INTO scrapeddata (idscrapedData, book, subHead, chapter, verseNumber, verse) VALUES (" + uuidv6() + ", Genesis," +  subHead + ", 2," +  numberofVerse + "," + versesWithoutCommas + ")";
+      let sqlStatement3 = "INSERT INTO `scrapeddata` (`idscrapedData`, `book`, `subHead`, `chapter`, `verseNumber`, `verse`) VALUES ("+uuidv6()+",1,'Genesis','Hey',2,123, 'alksdjf')";
+      let sqlStatement4 = "INSERT INTO `scrapeddata` (`idscrapedData`, `book`, `subHead`, `chapter`, `verseNumber`, `verse`) VALUES ("+adjustnumberofVerse+",'Gensis','Hey',2,123, "+test+")";
+      console.log(sqlStatement4);
+      connection.query(sqlStatement4, function (error, result){
+        if (error){
+          throw error;
+        }else{
+          console.log ("RECORD INSERTED!@");
+        }
+      })
 
 
-     
+
+      console.log(subHead);
       console.log(numberofVerse);
       console.log(verses);
     });
