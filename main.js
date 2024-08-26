@@ -18,7 +18,8 @@ const connection = require("./DATABASE/server.js");
 
 
 
-agentURL = "https://read.lsbible.org/?q=Genesis+1";
+
+
 
 
 
@@ -290,50 +291,118 @@ bibleData = [
   }
 ]
 
+bibleDataTEST = [
+  {
+    Book: "Matthew",
+    Chapters: 28
+  },
+  {
+    Book: "Mark",
+    Chapters: 16
+  },
+  {
+    Book: "Luke",
+    Chapters: 24
+  },
+  {
+    Book: "John",
+    Chapters: 21
+  },
+  {
+    Book: "Acts",
+    Chapters: 28
+  }
+]
+bibleDataTEST1 = [
+  {
+    Book: "Matthew",
+    Chapters: 28
+  }
+]
+bibleDataTEST1.forEach(function (arrayItem){
+  let x = arrayItem.Book;
+  let y = arrayItem.Chapters;
+  let i = 1;
+  console.log(x);
+  console.log(y);
+
+    while( i <= y){
+      let chapterNumber = i;
+      agentURL = `https://read.lsbible.org/?q=${x}+${i}`;
+      console.log(`Book:${x} Chapter:${i}`)
 
 
-axios.get(agentURL)
-  .then(res => {
-    const $ = cheerio.load(res.data)
-    $(".verse").each((index, element) => {
-      let verses = $(element).find(".prose").text();
-      let numberofVerse = $(element).attr("data-key");
-      let subHead;
+      axios.get(agentURL)
+      .then(res => {
+        const $ = cheerio.load(res.data)
+        $(".verse").each((index, element) => {
+          let verses = "";
+          let numberofVerse = $(element).attr("data-key");
+          let subHead;
+          
+          if ($(element).find(".prose").text() === ""){
+            verses = $(element).find(".poetry").text();
+          }else if ($(element).find(".poetry").text() === ""){
+            verses = $(element).find(".prose").text();
+          }
+
+          //SUBHEADER FINDER/PRINTER
+          if ( $(element).find(".subhead").text() != "" || $(element).find(".subhead").text() != "undefined" || $(element).find(".subhead").text() != null || $(element).find(".subhead").text() != undefined ){
       
+            subHead = $(element).find(".subhead").text();
+            
+          } else {
+            subhead = "empty";
+          }
+          
+          let versesWithoutCommas = verses.replace(/,/g,"<^>");
+          let adjustedNumberofVerse = numberofVerse.replace(/-/g,'', 'hex');
+          let strippedAdjustedNumberV = adjustedNumberofVerse.substring(5,2);
+          let test = "ABC";
 
-      //SUBHEADER FINDER/PRINTER
-      if ( $(element).find(".subhead").text() != "" || $(element).find(".subhead").text() != "undefined" || $(element).find(".subhead").text() != null || $(element).find(".subhead").text() != undefined ){
+          // let sqlStatement1 = `INSERT INTO scrapeddata (idscrapedData, book, subHead, chapter, verseNumber, verse) VALUES ( ${uuidv6()}, ${"Genesis"}, ${subHead}, ${1}, ${numberofVerse}, &*${versesWithoutCommas}&*)`;
+          // let sqlStatement2 = "INSERT INTO scrapeddata (idscrapedData, book, subHead, chapter, verseNumber, verse) VALUES (" + uuidv6() + ", Genesis," +  subHead + ", 2," +  numberofVerse + "," + versesWithoutCommas + ")";
+          // let sqlStatement3 = "INSERT INTO `scrapeddata` (`idscrapedData`, `book`, `subHead`, `chapter`, `verseNumber`, `verse`) VALUES ("+uuidv6()+",1,'Genesis','Hey',2,123, 'alksdjf')";
+          let sqlStatement4 = "INSERT INTO `scrapeddata` (`idscrapedData`, `book`, `subHead`, `chapter`, `verseNumber`, `verse`) VALUES ('"+uuidv6()+"','"+x+"', '"+subHead+"','"+chapterNumber+"',"+strippedAdjustedNumberV+", '"+verses+"')";
+          console.log(sqlStatement4);
+          
+          console.log(adjustedNumberofVerse.substring(5,2));
+          connection.query(sqlStatement4, function (error, result){
+            if (error){
+              throw error;
+            }else{
+              console.log ("RECORD INSERTED!@");
+            }
+          });
+
+          
+        });
+      }).catch(err => console.error(err));
+
+      i++;
+    }
   
-        subHead = $(element).find(".subhead").text();
-        
-      } else {
-        subhead = "empty";
-      }
-      
-      let versesWithoutCommas = verses.replace(/,/g,"<^>");
-      let adjustnumberofVerse = numberofVerse.replace(/-/g,'', 'hex')
-      let test = "ABC";
-
-      let sqlStatement1 = `INSERT INTO scrapeddata (idscrapedData, book, subHead, chapter, verseNumber, verse) VALUES ( ${uuidv6()}, ${"Genesis"}, ${subHead}, ${1}, ${numberofVerse}, &*${versesWithoutCommas}&*)`;
-      let sqlStatement2 = "INSERT INTO scrapeddata (idscrapedData, book, subHead, chapter, verseNumber, verse) VALUES (" + uuidv6() + ", Genesis," +  subHead + ", 2," +  numberofVerse + "," + versesWithoutCommas + ")";
-      let sqlStatement3 = "INSERT INTO `scrapeddata` (`idscrapedData`, `book`, `subHead`, `chapter`, `verseNumber`, `verse`) VALUES ("+uuidv6()+",1,'Genesis','Hey',2,123, 'alksdjf')";
-      let sqlStatement4 = "INSERT INTO `scrapeddata` (`idscrapedData`, `book`, `subHead`, `chapter`, `verseNumber`, `verse`) VALUES ("+adjustnumberofVerse+",'Gensis','Hey',2,123, "+test+")";
-      console.log(sqlStatement4);
-      connection.query(sqlStatement4, function (error, result){
-        if (error){
-          throw error;
-        }else{
-          console.log ("RECORD INSERTED!@");
-        }
-      })
+  
 
 
 
-      console.log(subHead);
-      console.log(numberofVerse);
-      console.log(verses);
-    });
-  }).catch(err => console.error(err));
+
+
+
+
+
+
+
+
+
+
+
+
+
+});
+
+
+
 
  
 
