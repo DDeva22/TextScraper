@@ -3,6 +3,7 @@ const cheerio = require("cheerio");
 const pretty = require("pretty");
 const { v6: uuidv6} = require("uuid");
 
+
 const fs = require("fs");
 
 const express = require("express");
@@ -15,8 +16,6 @@ const port = process.env.PORT || 3000
 
 
 const connection = require("./DATABASE/server.js");
-
-
 
 
 
@@ -323,12 +322,12 @@ bibleDataTEST1.forEach(function (arrayItem){
   let x = arrayItem.Book;
   let y = arrayItem.Chapters;
   let i = 1;
-  console.log(x);
-  console.log(y);
+ 
 
+  //switch back to i <= y when done
     while( i <= y){
       let chapterNumber = i;
-      agentURL = `https://read.lsbible.org/?q=${x}+${i}`;
+      agentURL = `https://read.lsbible.org/?q=${"matthew"}+${i}`;
       console.log(`Book:${x} Chapter:${i}`)
 
 
@@ -337,12 +336,24 @@ bibleDataTEST1.forEach(function (arrayItem){
         const $ = cheerio.load(res.data)
         $(".verse").each((index, element) => {
           let verses = "";
+          let redVerses = "";
           let numberofVerse = $(element).attr("data-key");
+
           let subHead;
           
           if ($(element).find(".prose").text() === ""){
+            if ($(element).find(".red-letter").text() != ""){
+              $(element).find(".red-letter").each(function(index, content){
+                redVerses = `${redVerses}*${$(content).text()}`;
+              });
+            }
             verses = $(element).find(".poetry").text();
           }else if ($(element).find(".poetry").text() === ""){
+            if ($(element).find(".red-letter").text() != ""){
+              $(element).find(".red-letter").each(function(index, content){
+                redVerses = `${redVerses}*${$(content).text()}`;
+              });
+            }
             verses = $(element).find(".prose").text();
           }
 
@@ -360,10 +371,8 @@ bibleDataTEST1.forEach(function (arrayItem){
           let strippedAdjustedNumberV = adjustedNumberofVerse.substring(5,2);
           let test = "ABC";
 
-          // let sqlStatement1 = `INSERT INTO scrapeddata (idscrapedData, book, subHead, chapter, verseNumber, verse) VALUES ( ${uuidv6()}, ${"Genesis"}, ${subHead}, ${1}, ${numberofVerse}, &*${versesWithoutCommas}&*)`;
-          // let sqlStatement2 = "INSERT INTO scrapeddata (idscrapedData, book, subHead, chapter, verseNumber, verse) VALUES (" + uuidv6() + ", Genesis," +  subHead + ", 2," +  numberofVerse + "," + versesWithoutCommas + ")";
-          // let sqlStatement3 = "INSERT INTO `scrapeddata` (`idscrapedData`, `book`, `subHead`, `chapter`, `verseNumber`, `verse`) VALUES ("+uuidv6()+",1,'Genesis','Hey',2,123, 'alksdjf')";
-          let sqlStatement4 = "INSERT INTO `scrapeddata` (`idscrapedData`, `book`, `subHead`, `chapter`, `verseNumber`, `verse`) VALUES ('"+uuidv6()+"','"+x+"', '"+subHead+"','"+chapterNumber+"',"+strippedAdjustedNumberV+", '"+verses+"')";
+          
+          let sqlStatement4 = "INSERT INTO `scrapeddata` (`idscrapedData`, `book`, `subHead`, `chapter`, `verseNumber`, `verse`, `redVerse`) VALUES ('"+uuidv6()+"','"+x+"', '"+subHead+"','"+chapterNumber+"',"+strippedAdjustedNumberV+", '"+verses+"', '"+redVerses+"')";
           console.log(sqlStatement4);
           
           console.log(adjustedNumberofVerse.substring(5,2));
@@ -375,11 +384,12 @@ bibleDataTEST1.forEach(function (arrayItem){
             }
           });
 
-          
+          i++;
         });
       }).catch(err => console.error(err));
 
-      i++;
+      
+      
     }
   
   
