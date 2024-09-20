@@ -384,25 +384,15 @@ bibleDataTEST1.forEach(function (arrayItem){
             }
           });
 
-          i++;
+          
         });
       }).catch(err => console.error(err));
 
       
-      
+      i++;
     }
   
   
-
-
-
-
-
-
-
-
-
-
 
 
 
